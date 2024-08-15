@@ -1,0 +1,17 @@
+{
+  "name": "kindle-newsletter",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Simple script to convert and send my favorite brazilian newsletter to my Kindle",
+  "main": "index.js",
+  "scripts": {
+    "start": "node --env-file=.env index.js"
+  },
+  "author": "vhrita.dev",
+  "license": "ISC",
+  "dependencies": {
+    "@lesjoursfr/html-to-epub": "^4.4.0",
+    "cheerio": "^1.0.0-rc.12",
+    "nodemailer": "^6.9.14"
+  }
+}
