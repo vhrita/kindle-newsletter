@@ -4,6 +4,11 @@ import nodemailer from 'nodemailer';
 import path from 'path';
 import fs from 'fs';
 
+// It's just for prevent PM2 first run
+if (!process.env.exit_code) {
+    process.exit(0);
+}
+
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     secure: true,
@@ -111,7 +116,7 @@ const transporter = nodemailer.createTransport({
     const epub = new EPub(options, `${process.cwd()}/the-news-${todayPostSlug}.epub`);
     await epub.render();
 
-    transporter.sendMail({
+    await transporter.sendMail({
         from: process.env.SENDER_EMAIL,
         to: process.env.KINDLE_EMAIL,
         subject: `The News for Kindle - ${info.post.web_title}`,
