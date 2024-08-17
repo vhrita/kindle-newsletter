@@ -103,8 +103,6 @@ const transporter = nodemailer.createTransport({
         posts = [];
 
         dividers.each((index, divider) => {
-            if (index === 0) return;
-
             if (index < dividers.length - 1) {
                 let contentElements = $(divider).nextUntil(dividers.eq(index + 1));
 
@@ -118,7 +116,8 @@ const transporter = nodemailer.createTransport({
 
                 if (concatenatedHTML) {
                     const hasH5 = /<h5\b[^>]*>(.*?)<\/h5>/i.test(concatenatedHTML);
-                    if (!blackList.some(blacklisted => concatenatedHTML.includes(blacklisted)) && hasH5) {
+                    const isYellow = /<span\b[^>]*style="[^"]*color:\s*(?:rgb\(\s*255,\s*207,\s*0\s*\)|#FFCF00)[^"]*"[^>]*>.*?<\/span>/i.test(concatenatedHTML);
+                    if (!blackList.some(blacklisted => concatenatedHTML.includes(blacklisted)) && hasH5 && isYellow) {
                         let $post = $('<div>').html(concatenatedHTML);
                         posts.push($post);
                     }
