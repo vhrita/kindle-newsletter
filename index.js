@@ -13,6 +13,12 @@ function getTodaysDate() {
     return `${dd}/${mm}/${yyyy}`;
 }
 
+// It's just for prevent PM2 first run. Keep it commented to run locally.
+// Uncomment it to run with PM2 in cluster mode.
+// if (!process.env.exit_code) {
+//     process.exit(0);
+// }
+
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     secure: true,
@@ -70,7 +76,7 @@ const transporter = nodemailer.createTransport({
 
     const blackList = [
         'PATROCINADO',
-        'OUTRAS MANCHETES',
+        'GIVEAWAY',
         'RODAPÉ',
         'OPINIÃO DO LEITOR',
         'YELLOW QUIZ',
@@ -90,6 +96,8 @@ const transporter = nodemailer.createTransport({
         );
 
     if (posts.length < 2) {
+        // By titles:
+        // Array.from(document.querySelectorAll('#content-blocks [id] > h5 > span[style*="color:#FFCF00"], span[style*="color:rgb(255, 207, 0)"]')).map(a => a.parentElement.parentElement).filter(post => !blackList.some(blacklisted => post.innerText.includes(blacklisted)))
         const childDivSelector = 'div[style*="border-top: 1px solid #dcdcdc"]';
         const dividers = $('#content-blocks').find(childDivSelector).parent();
         posts = [];
@@ -139,7 +147,7 @@ const transporter = nodemailer.createTransport({
         appendChapterTitles: false,
         tocTitle: 'Sumário',
         hideToC: true
-        // cover: `${process.cwd()}/thumbnail.png`,
+        // cover: `${process.cwd()}/thumbnail.png`, // Cover image will appear in the first page of the epub, It's not working properly, so I'm not using it
     };
 
     const epub = new EPub(options, `${process.cwd()}/the-news-${todayPostSlug}.epub`);
