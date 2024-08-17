@@ -4,9 +4,13 @@ import nodemailer from 'nodemailer';
 import path from 'path';
 import fs from 'fs';
 
-// It's just for prevent PM2 first run
-if (!process.env.exit_code) {
-    process.exit(0);
+function getTodaysDate() {
+    const today = new Date();
+    const dd = String(today.getDate()).padStart(2, '0');
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const yyyy = today.getFullYear();
+
+    return `${dd}/${mm}/${yyyy}`;
 }
 
 const transporter = nodemailer.createTransport({
@@ -19,13 +23,38 @@ const transporter = nodemailer.createTransport({
 });
 
 (async () => {
-    const todayPostSlug = await fetch('https://thenewscc.beehiiv.com/?_data=routes%2Findex')
+    const getRecentPost = async () => await fetch('https://thenewscc.beehiiv.com/?_data=routes%2Findex')
         .then(res => res.json())
-        .then(data => data['paginatedPosts']['posts'][0]['slug'])
+        .then(data => data['paginatedPosts']['posts'][0])
         .catch(() => {
             console.log('Error fetching slug');
             return;
         });
+
+    let recentPost = await getRecentPost();
+
+    // Todays post is not available yet
+    if (recentPost?.web_title !== getTodaysDate()) {
+        let tries = 0;
+        let gotTodaysPost = false;
+
+        // The news is published monday to saturday at 6:06
+        // cronjob starts 6:15, so we wait 15 minutes, maximum of 7 times
+        while (!gotTodaysPost && tries < 8) {
+            await new Promise(resolve => setTimeout(resolve, 900000));
+            recentPost = await getRecentPost();
+            gotTodaysPost = recentPost?.web_title === getTodaysDate();
+            tries++;
+            console.log(`Tentativa ${tries} de 7`);
+        }
+
+        if (!gotTodaysPost) {
+            console.log('Não foi possível encontrar a notícia de hoje.');
+            return;
+        }
+    }
+
+    let todayPostSlug = recentPost.slug;
 
     const info = await fetch(`https://thenewscc.beehiiv.com/p/${todayPostSlug}?_data=routes%2Fp%2F%24slug`)
         .then(res => res.json())
