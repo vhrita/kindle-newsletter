@@ -4,20 +4,17 @@ import nodemailer from 'nodemailer';
 import path from 'path';
 import fs from 'fs';
 
-function getTodaysDate() {
-    const today = new Date();
-    const dd = String(today.getDate()).padStart(2, '0');
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const yyyy = today.getFullYear();
-
-    return `${dd}/${mm}/${yyyy}`;
-}
-
 // It's just for prevent PM2 first run. Keep it commented to run locally.
 // Uncomment it to run with PM2 in cluster mode.
 // if (!process.env.exit_code) {
 //     process.exit(0);
 // }
+
+function areDatesEqual(date1, date2) {
+    const dateOnly1 = date1.toISOString().split('T')[0];
+    const dateOnly2 = date2.toISOString().split('T')[0];
+    return dateOnly1 === dateOnly2;
+}
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -40,7 +37,7 @@ const transporter = nodemailer.createTransport({
     let recentPost = await getRecentPost();
 
     // Todays post is not available yet
-    if (recentPost?.web_title !== getTodaysDate()) {
+    if (!areDatesEqual(new Date(recentPost?.updated_at), new Date())) {
         let tries = 0;
         let gotTodaysPost = false;
 
@@ -49,7 +46,7 @@ const transporter = nodemailer.createTransport({
         while (!gotTodaysPost && tries < 8) {
             await new Promise(resolve => setTimeout(resolve, 900000));
             recentPost = await getRecentPost();
-            gotTodaysPost = recentPost?.web_title === getTodaysDate();
+            gotTodaysPost = areDatesEqual(new Date(recentPost?.updated_at), new Date());
             tries++;
             console.log(`Tentativa ${tries} de 7`);
         }
@@ -80,19 +77,21 @@ const transporter = nodemailer.createTransport({
         'RODAPÉ',
         'OPINIÃO DO LEITOR',
         'YELLOW QUIZ',
+        'THE NEWS',
         'DICAS DO FINAL DE SEMANA',
     ];
 
     let posts = Array.from(
         new Set(
             $('#content-blocks div > div > h5')
+                .filter((_, h5) => !blackList.some(blacklisted => $(h5).text().includes(blacklisted)))
                 .map((_, h5) => $(h5).parent().parent().toString())
                 .get()
         )
     ).map(html => $(html))
         .filter(post =>
-            !post.attr('id') &&
-            !blackList.some(blacklisted => post.text().includes(blacklisted))
+            !post.attr('id')
+            // !blackList.some(blacklisted => post.text().includes(blacklisted))
         );
 
     if (posts.length < 2) {
@@ -108,18 +107,20 @@ const transporter = nodemailer.createTransport({
 
                 let $combinedContent = $('<div>').append(contentElements.clone());
 
-                $combinedContent.find('img').remove();
-                $combinedContent.find('button').remove();
-                $combinedContent.find('style').remove();
-
                 let concatenatedHTML = $combinedContent.html();
 
                 if (concatenatedHTML) {
                     const hasH5 = /<h5\b[^>]*>(.*?)<\/h5>/i.test(concatenatedHTML);
                     const isYellow = /<span\b[^>]*style="[^"]*color:\s*(?:rgb\(\s*255,\s*207,\s*0\s*\)|#FFCF00)[^"]*"[^>]*>.*?<\/span>/i.test(concatenatedHTML);
-                    if (!blackList.some(blacklisted => concatenatedHTML.includes(blacklisted)) && hasH5 && isYellow) {
-                        let $post = $('<div>').html(concatenatedHTML);
-                        posts.push($post);
+
+                    if (hasH5 && isYellow) {
+                        const h5Text = concatenatedHTML.match(/<h5\b[^>]*>(.*?)<\/h5>/i)[1].trim();
+                        const isH5Blacklisted = blackList.some(blacklisted => h5Text.includes(blacklisted));
+
+                        if (!isH5Blacklisted) {
+                            let $post = $('<div>').html(concatenatedHTML);
+                            posts.push($post);
+                        }
                     }
                 }
             }
@@ -129,7 +130,7 @@ const transporter = nodemailer.createTransport({
     const contents = [];
 
     posts.forEach(post => {
-        post.find('img').remove();
+        // post.find('img').remove();   // Uncomment this line to remove images from the epub
         post.find('button').remove();
         post.find('style').remove();
         const title = post.find('h5').eq(1).text();
