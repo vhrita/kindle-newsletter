@@ -77,22 +77,23 @@ const transporter = nodemailer.createTransport({
         'RODAPÉ',
         'OPINIÃO DO LEITOR',
         'YELLOW QUIZ',
-        'THE NEWS',
-        'DICAS DO FINAL DE SEMANA',
+        'PESQUISA DO',
+        'QUEM SOMOS',
+        'APRESENTADO POR',
+        'PROGRAMA DE',
     ];
 
     let posts = Array.from(
         new Set(
             $('#content-blocks div > div > h5')
-                .filter((_, h5) => !blackList.some(blacklisted => $(h5).text().includes(blacklisted)))
+                .filter((_, h5) => {
+                    const text = $(h5).text().toUpperCase();
+                    return !blackList.some(blacklisted => new RegExp(`\\b${blacklisted}\\b`, 'i').test(text));
+                })
                 .map((_, h5) => $(h5).parent().parent().toString())
                 .get()
         )
-    ).map(html => $(html))
-        .filter(post =>
-            !post.attr('id')
-            // !blackList.some(blacklisted => post.text().includes(blacklisted))
-        );
+    ).map(html => $(html)).filter(post => !post.attr('id'));
 
     if (posts.length < 2) {
         // By titles:
@@ -133,10 +134,17 @@ const transporter = nodemailer.createTransport({
         // post.find('img').remove();   // Uncomment this line to remove images from the epub
         post.find('button').remove();
         post.find('style').remove();
-        const title = post.find('h5').eq(1).text();
+        const title = post.find('h5').eq(1).text() || post.find('h5').eq(0).text();
         const content = post.html();
 
-        title && contents.push({ title, data: content });
+        const isBlacklisted = blackList.some(blacklisted => 
+            Array.from(post.find('h5').add(post.find('h4')))
+                .some(h => new RegExp(blacklisted, 'i').test($(h).text().toUpperCase()))
+        );
+
+        if (!isBlacklisted) {
+            title && contents.push({ title, data: content });
+        }
     });
 
     const options = {
@@ -150,7 +158,7 @@ const transporter = nodemailer.createTransport({
         // cover: `${process.cwd()}/thumbnail.png`, // Cover image will appear in the first page of the epub, It's not working properly, so I'm not using it
     };
 
-    const epub = new EPub(options, `${process.cwd()}/the-news-${todayPostSlug}.epub`);
+    const epub = new EPub(options, `${process.cwd()}/the-news-${info.post['web_title'].replaceAll('/', '-')}.epub`);
     await epub.render();
 
     await transporter.sendMail({
