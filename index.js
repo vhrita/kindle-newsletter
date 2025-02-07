@@ -167,8 +167,8 @@ const transporter = nodemailer.createTransport({
         subject: `The News for Kindle - ${info.post.web_title}`,
         text: `The News ${info.post.web_title}\n${contents.map(content => content.title).join('\n')}`,
         attachments: [{
-            filename: `the-news-${todayPostSlug}.epub`,
-            path: `${path.resolve('')}/the-news-${todayPostSlug}.epub`,
+            filename: `the-news-${info.post['web_title'].replaceAll('/', '-')}.epub`,
+            path: `${path.resolve('')}/the-news-${info.post['web_title'].replaceAll('/', '-')}.epub`,
             contentType: 'application/epub+zip'
         }],
     }, async (error, info) => {
