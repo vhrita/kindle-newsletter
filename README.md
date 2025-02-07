@@ -36,6 +36,69 @@ I personally use **PM2 cron** on my VPS.
 
 ---
 
+## 🔄 Running with PM2  
+
+You can use **PM2** to keep the script running in the background and restart it automatically.  
+That's how I do in my VPS:
+
+### Install PM2 (if you haven't already):  
+```sh
+npm install -g pm2
+```
+
+### Add your app to PM2:  
+Create a configuration file named `ecosystem.config.js` and add the following content:
+
+```js
+module.exports = {
+  apps: [
+    {
+      name: "kindle-newsletter",
+      script: "npm",
+      args: "run start",
+      cwd: "YOUR/PATH", // Script path like: /root/kindle-newsletter
+      instances: 1,
+      autorestart: false, // We already have retry control at the code
+      cron_restart: "15 6 * * 1-6", // Executes every 6:15 AM (MON - SAT)
+      env: {
+        NODE_ENV: "production",
+      },
+    },
+  ],
+};
+```
+
+### Start your app with PM2:  
+```sh
+pm2 start ecosystem.config.js
+```
+
+### Save the process so it restarts after a reboot:  
+```sh
+pm2 save
+pm2 startup
+```
+
+### Useful PM2 Commands:
+- **List running processes:**  
+  ```sh
+  pm2 list
+  ```
+- **Restart the app manually:**  
+  ```sh
+  pm2 restart kindle-newsletter
+  ```
+- **Stop the app:**  
+  ```sh
+  pm2 stop kindle-newsletter
+  ```
+- **Delete the app from PM2:**  
+  ```sh
+  pm2 delete kindle-newsletter
+  ```
+
+---
+
 ## 🔧 Want to Customize It?  
 
 You are free to **modify** or **use this script as inspiration** for your own projects.  
