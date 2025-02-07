@@ -1,25 +1,51 @@
-## What it can do?
+# 📩 Auto Send "The News" to Kindle
 
-This script automatically converts to .epub and sends to Kindle the most recent post from [The News](https://thenewscc.beehiiv.com/)
+This script **automatically converts** the latest post from [The News](https://thenewscc.beehiiv.com/) into `.epub` format and sends it to your Kindle.
 
-It was created by me, to me, and can't be used to sell any content.
+⚠ **Disclaimer:** This script was created for **personal use only** and is not intended for selling, distributing, or sharing content from *The News* or *Waffle Company*.  
+It modifies the original post, and you **cannot share the modified content** without permission from the newsletter owners.
 
-The original post from The News is modified by this script, so you can't share that modified content without permission.
+---
 
-I don't have any rights from The News, so I can't share any content with you, just that script.
+## 🚀 How to Use
 
-**I use this script just for personal use and I don't sell or share any informations from The News or Waffle company.**
+### 1️⃣ Configure the `.env` File  
+Before running the script, you need to set up your environment variables:
 
-## Wanna use this too?
+- **Gmail Account**:  
+  - Required if you use the default *nodemailer* configuration.
+  - Must be **whitelisted** in your Kindle settings to receive emails.
+- **Gmail App Password (SENDER_PASS)**:  
+  - **Do not use** your Gmail password.  
+  - Generate an **App Password** in your Google Account:  
+    - 📌 **Important:** You must enable **2-Step Authentication** first.  
+    - 🔗 [Generate an app password here](https://myaccount.google.com/apppasswords?pli=1)  
 
--   Configure the .env file:
-    -   You will need a Gmail account if you don't want to change the nodemailer configuration in code.
-    -   This same Gmail account need to be in your Kindle whitelist, to receive e-mails from.
-    -   The SENDER_PASS isn't the Gmail account password, you will need to generate an app password in your Google Account (same as Gmail):
-        -   **ATTENTION**: You need to active 2-step autentication before generating the password.
-        -   [Generate your password: here](https://myaccount.google.com/u/2/apppasswords?pli=1&rapt=AEjHL4OM0yaOWrieJv2hCzwuGbrQVHY5ZbXxXDXT779Mypw-eslHoPls_F9s0pHle5yqB696BSkmQ2AjecydtbjmRmhFxjNQIcnVLjRxKF41Qxo5bMDrzIA)
--   You can run that script just typing `npm install` and then `npm run start` in your prompt, or you can use a system scheduler. I personally use PM2 cron at my VPS.
+---
 
-## Wanna change the newsletter, the mail server or anything else?
+### 2️⃣ Install Dependencies & Run  
+Run the following commands in your terminal:
 
-You are free to modify and get inspired by my code, if you need any help you can contact me.
+```sh
+npm install
+npm run start
+```
+
+Alternatively, you can schedule it to run automatically.  
+I personally use **PM2 cron** on my VPS.
+
+---
+
+## 🔧 Want to Customize It?  
+
+You are free to **modify** or **use this script as inspiration** for your own projects.  
+If you need help, feel free to contact me.  
+
+### Possible Modifications:
+✅ Change the newsletter source  
+✅ Use a different email provider  
+✅ Adjust formatting and output settings  
+
+---
+
+Enjoy! 😊 Happy reading on your Kindle!  
