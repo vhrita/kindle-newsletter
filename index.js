@@ -4,12 +4,6 @@ import nodemailer from 'nodemailer';
 import path from 'path';
 import fs from 'fs';
 
-// It's just for prevent PM2 first run. Keep it commented to run locally.
-// Uncomment it to run with PM2 in cluster mode.
-// if (!process.env.exit_code) {
-//     process.exit(0);
-// }
-
 function areDatesEqual(date1, date2) {
     const dateOnly1 = date1.toISOString().split('T')[0];
     const dateOnly2 = date2.toISOString().split('T')[0];
