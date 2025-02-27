@@ -5,7 +5,7 @@
   "description": "Simple script to convert and send my favorite brazilian newsletter to my Kindle",
   "main": "index.js",
   "scripts": {
-    "start": "node --env-file=.env index.js",
+    "start": "node index.js",
     "dev": "node --env-file=.env.dev index.js"
   },
   "author": "vhrita.dev",
