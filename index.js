@@ -20,6 +20,8 @@ const transporter = nodemailer.createTransport({
 });
 
 (async () => {
+    console.time('Script execution time');
+    console.log('Iniciando script...');
     const getRecentPost = async () => await fetch('https://thenewscc.beehiiv.com/?_data=routes%2Findex')
         .then(res => res.json())
         .then(data => data['paginatedPosts']['posts'][0])
@@ -32,6 +34,7 @@ const transporter = nodemailer.createTransport({
 
     // Todays post is not available yet
     if (!areDatesEqual(new Date(recentPost?.updated_at), new Date())) {
+        console.log('A notícia de hoje ainda não foi publicada.');
         let tries = 0;
         let gotTodaysPost = false;
 
@@ -52,6 +55,7 @@ const transporter = nodemailer.createTransport({
     }
 
     let todayPostSlug = recentPost.slug;
+    console.log('Slug da notícia de hoje:', todayPostSlug);
 
     const info = await fetch(`https://thenewscc.beehiiv.com/p/${todayPostSlug}?_data=routes%2Fp%2F%24slug`)
         .then(res => res.json())
@@ -77,6 +81,7 @@ const transporter = nodemailer.createTransport({
         'PROGRAMA DE',
     ];
 
+    console.log('Iniciando extração de conteúdo...');
     let posts = Array.from(
         new Set(
             $('#content-blocks div > div > h5')
@@ -152,9 +157,11 @@ const transporter = nodemailer.createTransport({
         // cover: `${process.cwd()}/thumbnail.png`, // Cover image will appear in the first page of the epub, It's not working properly, so I'm not using it
     };
 
+    console.log('Iniciando geração do arquivo epub...');
     const epub = new EPub(options, `${process.cwd()}/the-news-${info.post['web_title'].replaceAll('/', '-')}.epub`);
     await epub.render();
 
+    console.log('Iniciando envio de e-mail...');
     await transporter.sendMail({
         from: process.env.SENDER_EMAIL,
         to: process.env.KINDLE_EMAIL,
@@ -184,4 +191,5 @@ const transporter = nodemailer.createTransport({
             console.error('Erro ao ler ou excluir arquivos no diretório:', err);
         }
     });
+    console.timeEnd('Script execution time');
 })();
