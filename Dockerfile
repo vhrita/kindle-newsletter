@@ -22,4 +22,4 @@ RUN mkdir -p /app && chmod -R 777 /app
 
 EXPOSE ${PORT}
 
-CMD [ "sh", "-c", "echo 'Container pronto para execução via crontab'" ]
+CMD ["sleep", "infinity"]
