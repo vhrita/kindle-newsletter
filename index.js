@@ -82,67 +82,37 @@ const transporter = nodemailer.createTransport({
     ];
 
     console.log('Iniciando extração de conteúdo...');
-    let posts = Array.from(
-        new Set(
-            $('#content-blocks div > div > h5')
-                .filter((_, h5) => {
-                    const text = $(h5).text().toUpperCase();
-                    return !blackList.some(blacklisted => new RegExp(`\\b${blacklisted}\\b`, 'i').test(text));
-                })
-                .map((_, h5) => $(h5).parent().parent().toString())
-                .get()
-        )
-    ).map(html => $(html)).filter(post => !post.attr('id'));
+    const contentBlocks = $('#content-blocks').children();
+    const posts = [];
 
-    if (posts.length < 2) {
-        // By titles:
-        // Array.from(document.querySelectorAll('#content-blocks [id] > h5 > span[style*="color:#FFCF00"], span[style*="color:rgb(255, 207, 0)"]')).map(a => a.parentElement.parentElement).filter(post => !blackList.some(blacklisted => post.innerText.includes(blacklisted)))
-        const childDivSelector = 'div[style*="border-top: 1px solid #dcdcdc"]';
-        const dividers = $('#content-blocks').find(childDivSelector).parent();
-        posts = [];
+    let currentPost = null;
+    contentBlocks.each((_, el) => {
+        const $el = $(el);
+        const isPostTitle = $el.find('h5 span[style*="color:#FFCF00"], h5 span[style*="color:rgb(255, 207, 0)"]').length > 0;
 
-        dividers.each((index, divider) => {
-            if (index < dividers.length - 1) {
-                let contentElements = $(divider).nextUntil(dividers.eq(index + 1));
-
-                let $combinedContent = $('<div>').append(contentElements.clone());
-
-                let concatenatedHTML = $combinedContent.html();
-
-                if (concatenatedHTML) {
-                    const hasH5 = /<h5\b[^>]*>(.*?)<\/h5>/i.test(concatenatedHTML);
-                    const isYellow = /<span\b[^>]*style="[^"]*color:\s*(?:rgb\(\s*255,\s*207,\s*0\s*\)|#FFCF00)[^"]*"[^>]*>.*?<\/span>/i.test(concatenatedHTML);
-
-                    if (hasH5 && isYellow) {
-                        const h5Text = concatenatedHTML.match(/<h5\b[^>]*>(.*?)<\/h5>/i)[1].trim();
-                        const isH5Blacklisted = blackList.some(blacklisted => h5Text.includes(blacklisted));
-
-                        if (!isH5Blacklisted) {
-                            let $post = $('<div>').html(concatenatedHTML);
-                            posts.push($post);
-                        }
-                    }
-                }
-            }
-        });
-    }
+        if (isPostTitle) {
+            const title = $el.text().trim().toUpperCase();
+            const isBlacklisted = blackList.some(b => title.includes(b));
+            if (currentPost) posts.push(currentPost); // Salva o post anterior, independente do próximo ser blacklisted
+            currentPost = isBlacklisted ? null : $('<div>').append($el.clone());
+        } else if (currentPost) {
+            currentPost.append($el.clone());
+        }
+    });
+    if (currentPost) posts.push(currentPost);
 
     const contents = [];
-
     posts.forEach(post => {
-        // post.find('img').remove();   // Uncomment this line to remove images from the epub
-        post.find('button').remove();
-        post.find('style').remove();
+        post.find('button, style').remove();
         const title = post.find('h5').eq(1).text() || post.find('h5').eq(0).text();
         const content = post.html();
 
-        const isBlacklisted = blackList.some(blacklisted => 
-            Array.from(post.find('h5').add(post.find('h4')))
-                .some(h => new RegExp(blacklisted, 'i').test($(h).text().toUpperCase()))
+        const isBlacklisted = blackList.some(bl =>
+            post.find('h5,h4').toArray().some(h => $(h).text().toUpperCase().includes(bl))
         );
 
-        if (!isBlacklisted) {
-            title && contents.push({ title, data: content });
+        if (title && !isBlacklisted) {
+            contents.push({ title, data: content });
         }
     });
 
